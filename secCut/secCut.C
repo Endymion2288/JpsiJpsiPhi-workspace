@@ -1,6 +1,6 @@
 #define secCut_cxx
-#include "/home/storage0/users/xingcheng/storage2/CMS-Analysis/JpsJpsPhi-workspace/secCut/secCut.h"
-#include "/home/storage0/users/xingcheng/storage2/CMS-Analysis/JpsJpsPhi-workspace/includes/ParticleCand.C"
+#include "/home/storage2/users/xingcheng/CMSSW_14_0_18/src/JpsiJpsiPhi-workspace/secCut/secCut.h"
+#include "/home/storage2/users/xingcheng/CMSSW_14_0_18/src/JpsiJpsiPhi-workspace/includes/ParticleCand.C"
 #include <TH2.h>
 #include <TStyle.h>
 #include <TCanvas.h>
@@ -17,8 +17,11 @@
 #include "RooFitResult.h"
 #include "RooChebychev.h"
 
-#define CUT_DR
-#define CUT_PRI_VTXPROB
+//#define CUT_DR
+//#define CUT_PRI_VTXPROB
+//#define CUT_PHI_VTXPROB
+//#define CUT_PHI_CTAU
+#define Stefanos_CUT
 
 //#define SHOW_DEBUG
 
@@ -41,10 +44,24 @@ void secCut::Loop()
     RooRealVar Phi_mass_var("Phi_mass_cut","Phi_mass_cut", 0.99, 1.07);
     RooRealVar Pri_mass_var("Pri_mass_cut","Pri_mass_cut", 0.0, 100.0);
 
-    RooRealVar Jpsi_1_ctau_var("Jpsi_1_ctau_cut", "Jpsi_1_ctau_cut", 0.0, 0.1);
-    RooRealVar Jpsi_2_ctau_var("Jpsi_2_ctau_cut", "Jpsi_2_ctau_cut", 0.0, 0.1);
-    RooRealVar Phi_ctau_var("Phi_ctau_cut","Phi_ctau_cut", 0.0, 0.1);
-    RooRealVar Pri_ctau_var("Pri_ctau_cut","Pri_ctau_cut", 0.0, 0.1);
+    RooRealVar Jpsi_1_ctau_var("Jpsi_1_ctau_cut", "Jpsi_1_ctau_cut", -0.05, 0.1);
+    RooRealVar Jpsi_2_ctau_var("Jpsi_2_ctau_cut", "Jpsi_2_ctau_cut", -0.05, 0.1);
+    RooRealVar Phi_ctau_var("Phi_ctau_cut","Phi_ctau_cut", -0.1, 0.1);
+    RooRealVar Pri_ctau_var("Pri_ctau_cut","Pri_ctau_cut", -0.1, 0.1);
+
+   //  RooRealVar Jpsi_1_ctau_error_var("Jpsi_1_ctau_error_cut", "Jpsi_1_ctau_error_cut", 0.0, 0.01);
+   //    RooRealVar Jpsi_2_ctau_error_var("Jpsi_2_ctau_error_cut", "Jpsi_2_ctau_error_cut", 0.0, 0.01);
+   //    RooRealVar Phi_ctau_error_var("Phi_ctau_error_cut","Phi_ctau_error_cut", 0.0, 0.1);
+   //    RooRealVar Pri_ctau_error_var("Pri_ctau_error_cut","Pri_ctau_error_cut", 0.0, 0.1);
+
+   RooRealVar Jpsi_1_Lxy_var("Jpsi_1_Lxy_cut", "Jpsi_1_Lxy_cut", -0.01, 0.01);
+   RooRealVar Jpsi_2_Lxy_var("Jpsi_2_Lxy_cut", "Jpsi_2_Lxy_cut", -0.01, 0.01);
+   RooRealVar Phi_Lxy_var("Phi_Lxy_cut","Phi_Lxy_cut", -0.01, 0.01);
+
+    RooRealVar Jpsi_1_VtxProb_var("Jpsi_1_VtxProb_cut", "Jpsi_1_VtxProb_cut", 0.0, 1.0);
+    RooRealVar Jpsi_2_VtxProb_var("Jpsi_2_VtxProb_cut", "Jpsi_2_VtxProb_cut", 0.0, 1.0);
+    RooRealVar Phi_VtxProb_var("Phi_VtxProb_cut","Phi_VtxProb_cut", 0.0, 1.0);
+    RooRealVar Pri_VtxProb_var("Pri_VtxProb_cut","Pri_VtxProb_cut", 0.0, 1.0);
 
     // Define dataset for Jpsi, Phi and Pri passing the cut. Using Roofit.
     RooDataSet Jpsi_1_mass_set_multi("Jpsi_1_mass_set_multi", "Jpsi_1_mass_set_multi", RooArgList(Jpsi_1_mass_var));
@@ -62,6 +79,20 @@ void secCut::Loop()
     RooDataSet Jpsi_2_ctau_set("Jpsi_2_ctau_set", "Jpsi_2_ctau_set", RooArgList(Jpsi_2_ctau_var));
     RooDataSet Phi_ctau_set("Phi_ctau_set", "Phi_ctau_set", RooArgList(Phi_ctau_var));
     RooDataSet Pri_ctau_set("Pri_ctau_set", "Pri_ctau_set", RooArgList(Pri_ctau_var));
+
+   //  RooDataSet Jpsi_1_ctau_error_set("Jpsi_1_ctau_error_set", "Jpsi_1_ctau_error_set", RooArgList(Jpsi_1_ctau_error_var));
+   //  RooDataSet Jpsi_2_ctau_error_set("Jpsi_2_ctau_error_set", "Jpsi_2_ctau_error_set", RooArgList(Jpsi_2_ctau_error_var));
+   //  RooDataSet Phi_ctau_error_set("Phi_ctau_error_set", "Phi_ctau_error_set", RooArgList(Phi_ctau_error_var));
+   //  RooDataSet Pri_ctau_error_set("Pri_ctau_error_set", "Pri_ctau_error_set", RooArgList(Pri_ctau_error_var));
+
+   RooDataSet Jpsi_1_Lxy_set("Jpsi_1_Lxy_set", "Jpsi_1_Lxy_set", RooArgList(Jpsi_1_Lxy_var));
+   RooDataSet Jpsi_2_Lxy_set("Jpsi_2_Lxy_set", "Jpsi_2_Lxy_set", RooArgList(Jpsi_2_Lxy_var));
+   RooDataSet Phi_Lxy_set("Phi_Lxy_set", "Phi_Lxy_set", RooArgList(Phi_Lxy_var));
+
+    RooDataSet Jpsi_1_VtxProb_set("Jpsi_1_VtxProb_set", "Jpsi_1_VtxProb_set", RooArgList(Jpsi_1_VtxProb_var));
+    RooDataSet Jpsi_2_VtxProb_set("Jpsi_2_VtxProb_set", "Jpsi_2_VtxProb_set", RooArgList(Jpsi_2_VtxProb_var));
+    RooDataSet Phi_VtxProb_set("Phi_VtxProb_set", "Phi_VtxProb_set", RooArgList(Phi_VtxProb_var));
+    RooDataSet Pri_VtxProb_set("Pri_VtxProb_set", "Pri_VtxProb_set", RooArgList(Pri_VtxProb_var));
 
     // --- Register your cut parameters here  ---
 
@@ -95,7 +126,7 @@ void secCut::Loop()
       // if (Cut(ientry) < 0) continue;
       // Marker set to show the progress.
       if(jentry % 500 == 0){
-         printf(">>> Processing entry %ld <<<\n", jentry);
+         printf(">>> Processing entry %lld <<<\n", jentry);
       }
 
       #ifdef TRY_E4
@@ -114,7 +145,8 @@ void secCut::Loop()
       double temp_massChi2;
       double temp_pt_abs;
       double temp_VtxProb;
-      double Pri_VtxProb_cut = 0.75;
+      double Pri_VtxProb_cut = 0.01;
+      double Phi_VtxProb_cut = 0.05;
 
       for (unsigned int iCand = 0; iCand < Jpsi_1_mass->size(); iCand++){
             bool passCut = true;
@@ -154,6 +186,53 @@ void secCut::Loop()
             if (Pri_VtxProb->at(iCand) < Pri_VtxProb_cut){
                passCut = false;
             }
+            #endif
+
+            #ifdef CUT_PHI_VTXPROB
+            if (Phi_VtxProb->at(iCand) < Phi_VtxProb_cut){
+               passCut = false;
+            }
+            #endif
+
+            #ifdef CUT_PHI_CTAU
+            if (Phi_ctau->at(iCand) < -0.02 || Phi_ctau->at(iCand) > 0.02){
+               passCut = false;
+            }
+            #endif
+
+            #ifdef Stefanos_CUT
+            if(Jpsi_1_pt->at(iCand) < 6.0 || Jpsi_2_pt->at(iCand) < 6.0){
+               passCut = false;
+            }
+
+            if(Jpsi_1_VtxProb->at(iCand) < 0.1 || Jpsi_2_VtxProb->at(iCand) < 0.1){
+               passCut = false;
+            }
+
+            double Jpsi_1_E = sqrt(Jpsi_1_mass->at(iCand) * Jpsi_1_mass->at(iCand) + Jpsi_1_px->at(iCand) * Jpsi_1_px->at(iCand) + Jpsi_1_py->at(iCand) * Jpsi_1_py->at(iCand) + Jpsi_1_pz->at(iCand) * Jpsi_1_pz->at(iCand));
+            double Jpsi_2_E = sqrt(Jpsi_2_mass->at(iCand) * Jpsi_2_mass->at(iCand) + Jpsi_2_px->at(iCand) * Jpsi_2_px->at(iCand) + Jpsi_2_py->at(iCand) * Jpsi_2_py->at(iCand) + Jpsi_2_pz->at(iCand) * Jpsi_2_pz->at(iCand));
+            double Jpsi_1_gamma = 0.5 * log((Jpsi_1_E + Jpsi_1_pz->at(iCand)) / (Jpsi_1_E - Jpsi_1_pz->at(iCand)));
+            double Jpsi_2_gamma = 0.5 * log((Jpsi_2_E + Jpsi_2_pz->at(iCand)) / (Jpsi_2_E - Jpsi_2_pz->at(iCand)));
+            if(fabs(Jpsi_1_gamma) > 2.4 || (Jpsi_2_gamma) > 2.4){
+               passCut = false;
+            }
+            
+            //JpsiJpsi四muon顶点拟合>0.01在ntuple里做过了
+
+            
+            Jpsi_1_Lxy->push_back(Jpsi_1_ctau->at(iCand) * Jpsi_1_pt->at(iCand) / Jpsi_1_mass->at(iCand));
+            Jpsi_2_Lxy->push_back(Jpsi_2_ctau->at(iCand) * Jpsi_2_pt->at(iCand) / Jpsi_2_mass->at(iCand));
+            Phi_Lxy->push_back(Phi_ctau->at(iCand) * Phi_pt->at(iCand) / Phi_mass->at(iCand));
+            if(Jpsi_1_Lxy->at(iCand) > 0.01 || Jpsi_2_Lxy->at(iCand) > 0.01 || Phi_Lxy->at(iCand) > 0.01){
+               passCut = false;
+            }
+
+            // double Jpsi_1_Lxy = Jpsi_1_ctau->at(iCand) * Jpsi_1_pt->at(iCand) / Jpsi_1_mass->at(iCand);
+            // double Jpsi_2_Lxy = Jpsi_2_ctau->at(iCand) * Jpsi_2_pt->at(iCand) / Jpsi_2_mass->at(iCand);
+            // double Phi_Lxy = Phi_ctau->at(iCand) * Phi_pt->at(iCand) / Phi_mass->at(iCand);
+            // if(Jpsi_1_Lxy > 0.01 || Jpsi_2_Lxy > 0.01 || Phi_Lxy > 0.01){
+            //    passCut = false;
+            // }
             #endif
 
             // // Apply Upsilon cuts
@@ -440,6 +519,34 @@ void secCut::Loop()
          Jpsi_2_ctau_set.add(RooArgSet(Jpsi_2_ctau_var));
          Phi_ctau_set.add(RooArgSet(Phi_ctau_var));
          Pri_ctau_set.add(RooArgSet(Pri_ctau_var));
+
+         // Jpsi_1_ctau_error_var.setVal(Jpsi_1_ctauErr->at(cand->GetId()));
+         // Jpsi_2_ctau_error_var.setVal(Jpsi_2_ctauErr->at(cand->GetId()));
+         // Phi_ctau_error_var.setVal(Phi_ctauErr->at(cand->GetId()));
+         // Pri_ctau_error_var.setVal(Pri_ctauErr->at(cand->GetId()));
+
+         // Jpsi_1_ctau_error_set.add(RooArgSet(Jpsi_1_ctau_error_var));
+         // Jpsi_2_ctau_error_set.add(RooArgSet(Jpsi_2_ctau_error_var));
+         // Phi_ctau_error_set.add(RooArgSet(Phi_ctau_error_var));
+         // Pri_ctau_error_set.add(RooArgSet(Pri_ctau_error_var));
+
+         Jpsi_1_Lxy_var.setVal(Jpsi_1_Lxy->at(cand->GetId()));
+         Jpsi_2_Lxy_var.setVal(Jpsi_2_Lxy->at(cand->GetId()));
+         Phi_Lxy_var.setVal(Phi_Lxy->at(cand->GetId()));
+
+         Jpsi_1_Lxy_set.add(RooArgSet(Jpsi_1_Lxy_var));
+         Jpsi_2_Lxy_set.add(RooArgSet(Jpsi_2_Lxy_var));
+         Phi_Lxy_set.add(RooArgSet(Phi_Lxy_var));
+
+         Jpsi_1_VtxProb_var.setVal(Jpsi_1_VtxProb->at(cand->GetId()));
+         Jpsi_2_VtxProb_var.setVal(Jpsi_2_VtxProb->at(cand->GetId()));
+         Phi_VtxProb_var.setVal(Phi_VtxProb->at(cand->GetId()));
+         Pri_VtxProb_var.setVal(Pri_VtxProb->at(cand->GetId()));
+
+         Jpsi_1_VtxProb_set.add(RooArgSet(Jpsi_1_VtxProb_var));
+         Jpsi_2_VtxProb_set.add(RooArgSet(Jpsi_2_VtxProb_var));
+         Phi_VtxProb_set.add(RooArgSet(Phi_VtxProb_var));
+         Pri_VtxProb_set.add(RooArgSet(Pri_VtxProb_var));
       }
       ClearBranches();
       CandList.clear();
@@ -514,6 +621,80 @@ void secCut::Loop()
    Pri_ctau_frame->Draw();
    c3->SaveAs("secCut_ctau.pdf");
    c3->SaveAs("secCut_ctau.png");
+
+   // Draw the histograms for the VtxProb
+   TCanvas *c4 = new TCanvas("c4", "c4", 1600, 1200);
+   c4->Divide(2,2);
+   RooPlot* Jpsi_1_VtxProb_frame = Jpsi_1_VtxProb_var.frame(nBins);
+   RooPlot* Jpsi_2_VtxProb_frame = Jpsi_2_VtxProb_var.frame(nBins);
+   RooPlot* Phi_VtxProb_frame = Phi_VtxProb_var.frame(nBins);
+   RooPlot* Pri_VtxProb_frame = Pri_VtxProb_var.frame(nBins);
+   Jpsi_1_VtxProb_set.plotOn(Jpsi_1_VtxProb_frame);
+   Jpsi_2_VtxProb_set.plotOn(Jpsi_2_VtxProb_frame);
+   Phi_VtxProb_set.plotOn(Phi_VtxProb_frame);
+   Pri_VtxProb_set.plotOn(Pri_VtxProb_frame);
+   c4->cd(1);
+   // gPad->SetLogy();
+   Jpsi_1_VtxProb_frame->Draw();
+   c4->cd(2);
+   // gPad->SetLogy();
+   Jpsi_2_VtxProb_frame->Draw();
+   c4->cd(3);
+   // gPad->SetLogy();
+   Phi_VtxProb_frame->Draw();
+   c4->cd(4);
+   // gPad->SetLogy();
+   Pri_VtxProb_frame->Draw();
+   c4->SaveAs("secCut_VtxProb.pdf");
+   c4->SaveAs("secCut_VtxProb.png");
+
+   // Draw the histograms for the ctau error
+   // TCanvas *c5 = new TCanvas("c5", "c5", 1600, 1200);
+   // c5->Divide(2,2);
+   // RooPlot* Jpsi_1_ctau_error_frame = Jpsi_1_ctau_error_var.frame(nBins);
+   // RooPlot* Jpsi_2_ctau_error_frame = Jpsi_2_ctau_error_var.frame(nBins);
+   // RooPlot* Phi_ctau_error_frame = Phi_ctau_error_var.frame(nBins);
+   // RooPlot* Pri_ctau_error_frame = Pri_ctau_error_var.frame(nBins);
+   // Jpsi_1_ctau_error_set.plotOn(Jpsi_1_ctau_error_frame);
+   // Jpsi_2_ctau_error_set.plotOn(Jpsi_2_ctau_error_frame);
+   // Phi_ctau_error_set.plotOn(Phi_ctau_error_frame);
+   // Pri_ctau_error_set.plotOn(Pri_ctau_error_frame);
+   // c5->cd(1);
+   // gPad->SetLogy();
+   // Jpsi_1_ctau_error_frame->Draw();
+   // c5->cd(2);
+   // gPad->SetLogy();
+   // Jpsi_2_ctau_error_frame->Draw();
+   // c5->cd(3);
+   // gPad->SetLogy();
+   // Phi_ctau_error_frame->Draw();
+   // c5->cd(4);
+   // gPad->SetLogy();
+   // Pri_ctau_error_frame->Draw();
+   // c5->SaveAs("secCut_ctau_error.pdf");
+   // c5->SaveAs("secCut_ctau_error.png");
+
+   // Draw the histograms for the Lxy
+   TCanvas *c6 = new TCanvas("c6", "c6", 1600, 1200);
+   c6->Divide(2,2);
+   RooPlot* Jpsi_1_Lxy_frame = Jpsi_1_Lxy_var.frame(nBins);
+   RooPlot* Jpsi_2_Lxy_frame = Jpsi_2_Lxy_var.frame(nBins);
+   RooPlot* Phi_Lxy_frame = Phi_Lxy_var.frame(nBins);
+   Jpsi_1_Lxy_set.plotOn(Jpsi_1_Lxy_frame);
+   Jpsi_2_Lxy_set.plotOn(Jpsi_2_Lxy_frame);
+   Phi_Lxy_set.plotOn(Phi_Lxy_frame);
+   c6->cd(1);
+   gPad->SetLogy();
+   Jpsi_1_Lxy_frame->Draw();
+   c6->cd(2);
+   gPad->SetLogy();
+   Jpsi_2_Lxy_frame->Draw();
+   c6->cd(3);
+   gPad->SetLogy();
+   Phi_Lxy_frame->Draw();
+   c6->SaveAs("secCut_Lxy.pdf");
+   c6->SaveAs("secCut_Lxy.png");
+
 
    // Save the output tree.
    TFile *outputFile = new TFile("filtered_data_secCut.root", "RECREATE");

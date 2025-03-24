@@ -20,8 +20,8 @@
 //#define DRAW_RAW
 
 #define ALLOW_OVERLAP
-#include "/home/storage0/users/xingcheng/storage2/CMS-Analysis/JpsJpsPhi-workspace/includes/ParticleCand.C"
-#include "/home/storage0/users/xingcheng/storage2/CMS-Analysis/JpsJpsPhi-workspace/preCut/preCut.h"
+#include "/home/storage2/users/xingcheng/CMSSW_14_0_18/src/JpsiJpsiPhi-workspace/includes/ParticleCand.C"
+#include "/home/storage2/users/xingcheng/CMSSW_14_0_18/src/JpsiJpsiPhi-workspace/preCut/preCut.h"
 #include <TH2.h>
 #include <TStyle.h>
 #include <TCanvas.h>
@@ -42,7 +42,7 @@ void preCut::Loop()
 
     Long64_t nentries = fChain->GetEntriesFast();
 
-    printf("Entries: %ld\n", nentries);
+    printf("Entries: %lld\n", nentries);
 
     const unsigned int nBin = 40;
     const unsigned int nBin_cut = 20;
@@ -139,10 +139,10 @@ void preCut::Loop()
             bool passCut = true;
 
             // Prevent underflow or overflow of masses.
-            if(Jpsi_1_mass->at(iCand) < 3.0 || Jpsi_1_mass->at(iCand) > 3.2){
+            if(Jpsi_1_mass->at(iCand) < 2.9 || Jpsi_1_mass->at(iCand) > 3.3){
                 continue;
             }
-            if(Jpsi_2_mass->at(iCand) < 3.0 || Jpsi_2_mass->at(iCand) > 3.2){
+            if(Jpsi_2_mass->at(iCand) < 2.9 || Jpsi_2_mass->at(iCand) > 3.3){
                 continue;
             }
             if(Phi_mass->at(iCand)  < 0.99 || Phi_mass->at(iCand)  > 1.07){
@@ -206,7 +206,7 @@ void preCut::Loop()
             // - Require abs(eta) < 2.5, which has been applied in previous steps.
             for(unsigned int iMuon=0; iMuon < 4; iMuon++){
                 unsigned int muonIdx = tempCand.GetParticleIdx(ParticleCand::PartType::Muon)->at(iMuon);
-                if(fabs(mu_eta.at(muonIdx)) > 2.5){
+                if(fabs(mu_eta.at(muonIdx)) > 2.4){
                     passCut = false;
                     break;
                 }
@@ -242,10 +242,13 @@ void preCut::Loop()
             // - Require pT > 2.0 GeV/c as a crude cut.
             // Kaon tracks:
             // - Require pT > 0.5 GeV/c as a crude cut.
-            if(Phi_pt->at(iCand) < 2.0){
+            if(Phi_pt->at(iCand) < 4.0){
                 continue;
             }
-            if(Phi_K_1_pt->at(iCand) < 0.5 || Phi_K_2_pt->at(iCand) < 0.5){
+            if(Phi_K_1_pt->at(iCand) < 2 || Phi_K_2_pt->at(iCand) < 2){
+                continue;
+            }
+            if(fabs(Phi_K_1_eta->at(iCand)) > 2.5 || fabs(Phi_K_2_eta->at(iCand)) > 2.5){
                 continue;
             }
             #endif

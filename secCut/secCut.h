@@ -138,6 +138,10 @@ public :
    vector<float>   *Phi_K_2_eta;
    vector<float>   *Phi_K_2_pt;
 
+   vector<float>   *Jpsi_1_Lxy;
+   vector<float>   *Jpsi_2_Lxy;
+   vector<float>   *Phi_Lxy;
+
    // List of branches
    TBranch        *b_Jpsi_1_mass;   //!
    TBranch        *b_Jpsi_1_massErr;   //!
@@ -564,6 +568,10 @@ void secCut::Init(TTree *tree)
    Phi_K_2_phi = 0;
    Phi_K_2_eta = 0;
    Phi_K_2_pt = 0;
+
+   Jpsi_1_Lxy = 0;
+   Jpsi_2_Lxy = 0;
+   Phi_Lxy = 0;
    // Set branch addresses and branch pointers
    if (!tree) return;
    fChain = tree;
@@ -838,6 +846,10 @@ Int_t secCut::Cut(Long64_t entry)
 }
 
 void secCut::ClearBranches(){
+   Jpsi_1_Lxy->clear();
+   Jpsi_2_Lxy->clear();
+   Phi_Lxy->clear();
+
    filtered_Jpsi_1_mass->clear();
    filtered_Jpsi_1_massErr->clear();
    filtered_Jpsi_1_massDiff->clear();
@@ -967,6 +979,10 @@ void secCut::InitFilteredTree()
 {
    filteredTree = new TTree("filteredTree", "filteredTree");
    // Define the branches for the filtered data.
+   filteredTree->Branch("Jpsi_1_Lxy", &Jpsi_1_Lxy);
+   filteredTree->Branch("Jpsi_2_Lxy", &Jpsi_2_Lxy);
+   filteredTree->Branch("Phi_Lxy", &Phi_Lxy);
+
    filteredTree->Branch("Jpsi_1_mass", &filtered_Jpsi_1_mass);
    filteredTree->Branch("Jpsi_1_massErr", &filtered_Jpsi_1_massErr);
    filteredTree->Branch("Jpsi_1_massDiff", &filtered_Jpsi_1_massDiff);

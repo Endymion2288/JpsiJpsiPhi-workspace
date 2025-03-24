@@ -1,5 +1,5 @@
-#include "/home/storage0/users/xingcheng/storage2/CMS-Analysis/JpsJpsPhi-workspace/includes/ParticleCand.C"
-#include "/home/storage0/users/xingcheng/storage2/CMS-Analysis/JpsJpsPhi-workspace/preCut/preCut.C"
+#include "/home/storage2/users/xingcheng/CMSSW_14_0_18/src/JpsiJpsiPhi-workspace/includes/ParticleCand.C"
+#include "/home/storage2/users/xingcheng/CMSSW_14_0_18/src/JpsiJpsiPhi-workspace/preCut/preCut.C"
 
 #define RUN_MINOR
 // #define RUN_ALL
@@ -17,7 +17,7 @@ void runPreCut(){
     //chain->Add("/home/storage0/users/chiwang/storage2/CMS-Analysis/JJP/Analysis/MultiCandChecker/JJU-ntuple.root");
     //chain->Add("/home/storage0/users/chiwang/storage2/CMS-Analysis/JpsiUpsPhi/rootNtuple/sample_JUP_2023.root");
     //chain->Add("/afs/cern.ch/user/c/chiw/cernbox/JpsiJpsiUps/rootNtuple/P_Run2024/P0_Run2024Cv1_0000.root");
-    chain->Add("/home/storage0/users/chiwang/storage2/CMS-Analysis/JpsiUpsPhi/rootNtuple/P_Run2023_half/*.root");
+    chain->Add("/home/storage0/users/xingcheng/storage2/CMS-Analysis/Data/HTCondor_merged_rootNtuple_250306/final_merged_crab3_0_Run2022Cv1_MINIAOD.root");
     #endif
 
     

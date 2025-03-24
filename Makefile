@@ -27,8 +27,7 @@
 # Marker for this job.
 suffix=Run3all_first
 
-rootNtupleDir=/home/storage0/users/xingcheng/storage2/CMS-Analysis/Data/JpsiJpsiPhi/merged_rootNtuple_Run3all_first
-
+rootNtupleDir=/home/storage0/users/xingcheng/storage2/CMS-Analysis/Data/HTCondor_merged_rootNtuple_250306
 
 
 # Preparation: generating the job targets.
@@ -59,6 +58,11 @@ all: $(preCut_output) $(preCut_joboutputs) $(secCut_joboutputs) $(fitMass_jobout
 
 clean:
 	rm -rf preCut/jobs_$(suffix)/* secCut/jobs_$(suffix)/* fitMass/jobs_$(suffix)/*
+
+datalist: config/datalist.txt
+
+config/datalist.txt:
+	find $(rootNtupleDir) -mindepth 1 -maxdepth 1 -type f > ./config/datalist.txt
 
 # preCut stage:
 # - General target.
