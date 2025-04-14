@@ -16,6 +16,8 @@
 #include "RooArgList.h"
 #include "RooFitResult.h"
 #include "RooChebychev.h"
+#include "RooAddPdf.h"
+#include "RooProdPdf.h"
 
 //#define CUT_DR
 //#define CUT_PRI_VTXPROB
@@ -54,9 +56,9 @@ void secCut::Loop()
    //    RooRealVar Phi_ctau_error_var("Phi_ctau_error_cut","Phi_ctau_error_cut", 0.0, 0.1);
    //    RooRealVar Pri_ctau_error_var("Pri_ctau_error_cut","Pri_ctau_error_cut", 0.0, 0.1);
 
-   RooRealVar Jpsi_1_Lxy_var("Jpsi_1_Lxy_cut", "Jpsi_1_Lxy_cut", -0.01, 0.01);
-   RooRealVar Jpsi_2_Lxy_var("Jpsi_2_Lxy_cut", "Jpsi_2_Lxy_cut", -0.01, 0.01);
-   RooRealVar Phi_Lxy_var("Phi_Lxy_cut","Phi_Lxy_cut", -0.01, 0.01);
+   RooRealVar Jpsi_1_Lxy_var("Jpsi_1_Lxy_cut", "Jpsi_1_Lxy_cut", -0.5, 0.5);
+   RooRealVar Jpsi_2_Lxy_var("Jpsi_2_Lxy_cut", "Jpsi_2_Lxy_cut", -0.5, 0.5);
+   RooRealVar Phi_Lxy_var("Phi_Lxy_cut","Phi_Lxy_cut", -0.5, 0.5);
 
     RooRealVar Jpsi_1_VtxProb_var("Jpsi_1_VtxProb_cut", "Jpsi_1_VtxProb_cut", 0.0, 1.0);
     RooRealVar Jpsi_2_VtxProb_var("Jpsi_2_VtxProb_cut", "Jpsi_2_VtxProb_cut", 0.0, 1.0);
@@ -94,7 +96,153 @@ void secCut::Loop()
     RooDataSet Phi_VtxProb_set("Phi_VtxProb_set", "Phi_VtxProb_set", RooArgList(Phi_VtxProb_var));
     RooDataSet Pri_VtxProb_set("Pri_VtxProb_set", "Pri_VtxProb_set", RooArgList(Pri_VtxProb_var));
 
-    // --- Register your cut parameters here  ---
+   gStyle->SetOptStat(0);
+   gStyle->SetCanvasColor(33);
+   gStyle->SetFrameFillColor(18);
+   Int_t cancolor = 17;
+   auto h2 = new TH2F("h2", "Jpsi_1_mass and Jpsi_2_mass", 20, 2.9, 3.3, 20, 2.9, 3.3);
+   h2->SetFillColor(46);
+   auto h3 = new TH2F("h3", "Jpsi_1_mass and Phi_mass", 20, 2.9, 3.3, 20, 0.99, 1.07);
+   h3->SetFillColor(46);
+   auto h4 = new TH2F("h4", "Jpsi_2_mass and Phi_mass", 20, 2.9, 3.3, 20, 0.99, 1.07);
+   h4->SetFillColor(46);
+
+    RooRealVar m_Jpsi_1("m_Jpsi_1", "J/#psi_{1} invariant mass", 3.097, 2.9, 3.3);
+    RooRealVar m_Jpsi_2("m_Jpsi_2", "J/#psi_{2} invariant mass", 3.097, 2.9, 3.3);
+    RooRealVar m_Phi("m_Phi", "#Phi invariant mass", 1.019, 0.99, 1.07);
+
+    RooDataSet data("data", "Dataset with m_Jpsi_1, m_Jpsi_2, m_Phi", RooArgSet(m_Jpsi_1, m_Jpsi_2, m_Phi));
+
+   // J/psi_1 的信号模型（Crystal Ball + Gaussian）
+   RooRealVar mean_Jpsi_1("mean_Jpsi_1", "Mean of J/#psi_{1}", 3.097, 3.05, 3.15);
+   RooRealVar sigma_CB_1("sigma_CB_1", "CB Sigma of J/#psi_{1}", 0.02, 0.005, 0.05);
+   RooRealVar alpha_1("alpha_1", "alpha of J/#psi_{1}", 1.5, 0.5, 5.0);
+   RooRealVar n_1("n_1", "n of J/#psi_{1}", 2.0, 1.0, 10.0);
+   RooCBShape cb_Jpsi_1("cb_Jpsi_1", "CB function for J/#psi_{1}", m_Jpsi_1, mean_Jpsi_1, sigma_CB_1, alpha_1, n_1);
+
+   RooRealVar sigma_Gauss_1("sigma_Gauss_1", "Gaussian Sigma of J/#psi_{1}", 0.03, 0.01, 0.1);
+   RooGaussian gauss_Jpsi_1("gauss_Jpsi_1", "Gaussian for J/#psi_{1}", m_Jpsi_1, mean_Jpsi_1, sigma_Gauss_1);
+
+   RooRealVar frac_1("frac_1", "Fraction of CB in J/#psi_{1}", 0.7, 0.0, 1.0);
+   RooAddPdf signal_Jpsi_1("signal_Jpsi_1", "Signal PDF for J/#psi_{1}", RooArgList(cb_Jpsi_1, gauss_Jpsi_1), frac_1);
+
+   // J/psi_1 的背景模型（指数函数）
+   RooRealVar lambda_1("lambda_1", "Background slope for J/#psi_{1}", -0.5, -10.0, 0.0);
+   RooExponential bkg_Jpsi_1("bkg_Jpsi_1", "Background PDF for J/#psi_{1}", m_Jpsi_1, lambda_1);
+
+   // J/psi_2 的信号模型（Crystal Ball + Gaussian）
+   RooRealVar mean_Jpsi_2("mean_Jpsi_2", "Mean of J/#psi_{2}", 3.097, 3.05, 3.15);
+   RooRealVar sigma_CB_2("sigma_CB_2", "CB Sigma of J/#psi_{2}", 0.02, 0.005, 0.05);
+   RooRealVar alpha_2("alpha_2", "alpha of J/#psi_{2}", 1.5, 0.5, 5.0);
+   RooRealVar n_2("n_2", "n of J/#psi_{2}", 2.0, 1.0, 10.0);
+   RooCBShape cb_Jpsi_2("cb_Jpsi_2", "CB function for J/#psi_{2}", m_Jpsi_2, mean_Jpsi_2, sigma_CB_2, alpha_2, n_2);
+
+   RooRealVar sigma_Gauss_2("sigma_Gauss_2", "Gaussian Sigma of J/#psi_{2}", 0.03, 0.01, 0.1);
+   RooGaussian gauss_Jpsi_2("gauss_Jpsi_2", "Gaussian for J/#psi_{2}", m_Jpsi_2, mean_Jpsi_2, sigma_Gauss_2);
+
+   RooRealVar frac_2("frac_2", "Fraction of CB in J/#psi_{2}", 0.7, 0.0, 1.0);
+   RooAddPdf signal_Jpsi_2("signal_Jpsi_2", "Signal PDF for J/#psi_{2}", RooArgList(cb_Jpsi_2, gauss_Jpsi_2), frac_2);
+
+   // J/psi_2 的背景模型（指数函数）
+   RooRealVar lambda_2("lambda_2", "Background slope for J/#psi_{2}", -0.5, -10.0, 0.0);
+   RooExponential bkg_Jpsi_2("bkg_Jpsi_2", "Background PDF for J/#psi_{2}", m_Jpsi_2, lambda_2);
+
+   // Phi 的信号模型（高斯分布）
+   RooRealVar mean_Phi("mean_Phi", "Mean of #Phi", 1.020, 1.01, 1.03); // MeV单位
+   RooRealVar sigma_Phi("sigma_Phi", "Sigma of #Phi", 0.003, 0.001, 0.01); // 3.1 MeV宽度
+   RooGaussian signal_Phi("signal_Phi", "Signal PDF for #Phi", m_Phi, mean_Phi, sigma_Phi);
+
+   // // Phi 的背景模型（4阶多项式）
+   // RooRealVar c0("c0", "c0", 1.0, -1000.0, 1000.0);
+   // RooRealVar c1("c1", "c1", 0.1, -1000.0, 1000.0);
+   // RooRealVar c2("c2", "c2", 0.01, -1000.0, 1000.0);
+   // // RooRealVar c3("c3", "c3", 0.001, -1000.0, 1000.0);
+   // // RooRealVar c4("c4", "c4", 0.0001, -10000.0, 10000.0);
+   // // RooPolynomial bkg_Phi("bkg_Phi", "Background PDF for #Phi", m_Phi, RooArgList(c0, c1, c2, c3, c4));
+   // RooPolynomial bkg_Phi("bkg_Phi", "Background PDF for #Phi", m_Phi, RooArgList(c0, c1, c2));
+
+   // Phi 的背景模型（误差函数）
+   RooRealVar erf_c0("erf_c0", "erf_c0", 1.0, 0.0, 10.0);         // 整体归一化参数
+   RooRealVar erf_c1("erf_c1", "erf_c1", 1.02, 0.98, 1.05);       // 位置参数（阈值）
+   RooRealVar erf_c2("erf_c2", "erf_c2", 0.005, 0.001, 0.02);     // 宽度参数
+   RooRealVar erf_c3("erf_c3", "erf_c3", 0.0, -0.5, 0.5);         // 线性分量的斜率
+   RooRealVar erf_c4("erf_c4", "erf_c4", 1.0, 0.0, 10.0);         // 误差函数的比例因子
+   RooRealVar erf_c5("erf_c5", "二次项系数", 0.0, -5.0, 5.0);
+   // 背景模型：p0 + p1*(m-m0) + p2*erf((m-m0)/p3)
+   // 使用线性项和误差函数的组合
+   RooGenericPdf bkg_Phi("bkg_Phi", "Phi介子背景PDF", 
+      "erf_c0 + erf_c3*(m_Phi - erf_c1) + erf_c5*(m_Phi - erf_c1)*(m_Phi - erf_c1) + erf_c4*TMath::Erf((m_Phi - erf_c1)/erf_c2)",
+      RooArgSet(m_Phi, erf_c0, erf_c1, erf_c2, erf_c3, erf_c4, erf_c5));
+
+
+   // // 定义三个子组件的比例
+   // RooRealVar nsig_Jpsi_1("nsig_Jpsi_1", "Number of J/#psi_{1} signal events", 1000, 0, 10000);
+   // RooRealVar nbkg_Jpsi_1("nbkg_Jpsi_1", "Number of J/#psi_{1} background events", 500, 0, 5000);
+   // RooRealVar nsig_Jpsi_2("nsig_Jpsi_2", "Number of J/#psi_{2} signal events", 1000, 0, 10000);
+   // RooRealVar nbkg_Jpsi_2("nbkg_Jpsi_2", "Number of J/#psi_{2} background events", 500, 0, 5000);
+   // RooRealVar nsig_Phi("nsig_Phi", "Number of #Phi signal events", 1000, 0, 10000);
+   // RooRealVar nbkg_Phi("nbkg_Phi", "Number of #Phi background events", 500, 0, 5000);
+
+   // // 组合 J/psi_1 的信号和背景
+   // RooAddPdf model_Jpsi_1("model_Jpsi_1", "Signal + Background for J/#psi_{1}", 
+   //                      RooArgList(signal_Jpsi_1, bkg_Jpsi_1), 
+   //                      RooArgList(nsig_Jpsi_1, nbkg_Jpsi_1));
+
+   // // 组合 J/psi_2 的信号和背景
+   // RooAddPdf model_Jpsi_2("model_Jpsi_2", "Signal + Background for J/#psi_{2}", 
+   //                      RooArgList(signal_Jpsi_2, bkg_Jpsi_2), 
+   //                      RooArgList(nsig_Jpsi_2, nbkg_Jpsi_2));
+
+   // // 组合 Phi 的信号和背景
+   // RooAddPdf model_Phi("model_Phi", "Signal + Background for #Phi", 
+   //                   RooArgList(signal_Phi, bkg_Phi), 
+   //                   RooArgList(nsig_Phi, nbkg_Phi));
+
+   // SSS: signal+signal+signal
+   RooRealVar yield_SSS("yield_SSS", "Yield of SSS", 100, 0, 10000);
+   RooProdPdf pdf_SSS("pdf_SSS", "Signal+Signal+Signal PDF", 
+                  RooArgList(signal_Jpsi_1, signal_Jpsi_2, signal_Phi));
+
+   // SSB: signal+signal+background
+   RooRealVar yield_SSB("yield_SSB", "Yield of SSB", 50, 0, 10000);
+   RooProdPdf pdf_SSB("pdf_SSB", "Signal+Signal+Background PDF", 
+                  RooArgList(signal_Jpsi_1, signal_Jpsi_2, bkg_Phi));
+
+   // SBS: signal+background+signal
+   RooRealVar yield_SBS("yield_SBS", "Yield of SBS", 50, 0, 10000);
+   RooProdPdf pdf_SBS("pdf_SBS", "Signal+Background+Signal PDF", 
+                  RooArgList(signal_Jpsi_1, bkg_Jpsi_2, signal_Phi));
+
+   // BSS: background+signal+signal
+   RooRealVar yield_BSS("yield_BSS", "Yield of BSS", 50, 0, 10000);
+   RooProdPdf pdf_BSS("pdf_BSS", "Background+Signal+Signal PDF", 
+                  RooArgList(bkg_Jpsi_1, signal_Jpsi_2, signal_Phi));
+
+   // SBB: signal+background+background
+   RooRealVar yield_SBB("yield_SBB", "Yield of SBB", 25, 0, 10000);
+   RooProdPdf pdf_SBB("pdf_SBB", "Signal+Background+Background PDF", 
+                  RooArgList(signal_Jpsi_1, bkg_Jpsi_2, bkg_Phi));
+
+   // BSB: background+signal+background
+   RooRealVar yield_BSB("yield_BSB", "Yield of BSB", 25, 0, 10000);
+   RooProdPdf pdf_BSB("pdf_BSB", "Background+Signal+Background PDF", 
+                  RooArgList(bkg_Jpsi_1, signal_Jpsi_2, bkg_Phi));
+
+   // BBS: background+background+signal
+   RooRealVar yield_BBS("yield_BBS", "Yield of BBS", 25, 0, 10000);
+   RooProdPdf pdf_BBS("pdf_BBS", "Background+Background+Signal PDF", 
+                  RooArgList(bkg_Jpsi_1, bkg_Jpsi_2, signal_Phi));
+
+   // BBB: background+background+background
+   RooRealVar yield_BBB("yield_BBB", "Yield of BBB", 10, 0, 10000);
+   RooProdPdf pdf_BBB("pdf_BBB", "Background+Background+Background PDF", 
+                  RooArgList(bkg_Jpsi_1, bkg_Jpsi_2, bkg_Phi));
+
+   // 组合8种可能性为一个完整模型
+   RooAddPdf totalModel("totalModel", "Total PDF", 
+                     RooArgList(pdf_SSS, pdf_SSB, pdf_SBS, pdf_BSS, pdf_SBB, pdf_BSB, pdf_BBS, pdf_BBB),
+                     RooArgList(yield_SSS, yield_SSB, yield_SBS, yield_BSS, yield_SBB, yield_BSB, yield_BBS, yield_BBB));
+
 
     double Jpsi1_Jpsi2_DR = 0.0;
     double Jpsi1_Phi_DR   = 0.0;
@@ -213,7 +361,7 @@ void secCut::Loop()
             double Jpsi_2_E = sqrt(Jpsi_2_mass->at(iCand) * Jpsi_2_mass->at(iCand) + Jpsi_2_px->at(iCand) * Jpsi_2_px->at(iCand) + Jpsi_2_py->at(iCand) * Jpsi_2_py->at(iCand) + Jpsi_2_pz->at(iCand) * Jpsi_2_pz->at(iCand));
             double Jpsi_1_gamma = 0.5 * log((Jpsi_1_E + Jpsi_1_pz->at(iCand)) / (Jpsi_1_E - Jpsi_1_pz->at(iCand)));
             double Jpsi_2_gamma = 0.5 * log((Jpsi_2_E + Jpsi_2_pz->at(iCand)) / (Jpsi_2_E - Jpsi_2_pz->at(iCand)));
-            if(fabs(Jpsi_1_gamma) > 2.4 || (Jpsi_2_gamma) > 2.4){
+            if(fabs(Jpsi_1_gamma) > 2.4 || fabs(Jpsi_2_gamma) > 2.4){
                passCut = false;
             }
             
@@ -223,9 +371,9 @@ void secCut::Loop()
             Jpsi_1_Lxy->push_back(Jpsi_1_ctau->at(iCand) * Jpsi_1_pt->at(iCand) / Jpsi_1_mass->at(iCand));
             Jpsi_2_Lxy->push_back(Jpsi_2_ctau->at(iCand) * Jpsi_2_pt->at(iCand) / Jpsi_2_mass->at(iCand));
             Phi_Lxy->push_back(Phi_ctau->at(iCand) * Phi_pt->at(iCand) / Phi_mass->at(iCand));
-            if(Jpsi_1_Lxy->at(iCand) > 0.01 || Jpsi_2_Lxy->at(iCand) > 0.01 || Phi_Lxy->at(iCand) > 0.01){
-               passCut = false;
-            }
+            // if(Jpsi_1_Lxy->at(iCand) > 0.1 || Jpsi_2_Lxy->at(iCand) > 0.1 || Phi_Lxy->at(iCand) > 0.1){
+            //    passCut = false;
+            // }
 
             // double Jpsi_1_Lxy = Jpsi_1_ctau->at(iCand) * Jpsi_1_pt->at(iCand) / Jpsi_1_mass->at(iCand);
             // double Jpsi_2_Lxy = Jpsi_2_ctau->at(iCand) * Jpsi_2_pt->at(iCand) / Jpsi_2_mass->at(iCand);
@@ -285,7 +433,7 @@ void secCut::Loop()
 
             temp_VtxProb = Jpsi_1_VtxProb->at(iCand) * Jpsi_2_VtxProb->at(iCand) * Phi_VtxProb->at(iCand);
 
-            tempCand.SetScore(temp_VtxProb);
+            tempCand.SetScore(temp_pt_abs);
             CandList.push_back(std::make_shared<ParticleCand>(tempCand));
       }
 
@@ -547,14 +695,26 @@ void secCut::Loop()
          Jpsi_2_VtxProb_set.add(RooArgSet(Jpsi_2_VtxProb_var));
          Phi_VtxProb_set.add(RooArgSet(Phi_VtxProb_var));
          Pri_VtxProb_set.add(RooArgSet(Pri_VtxProb_var));
+
+         double jpsi1_mass = Jpsi_1_mass->at(cand->GetId()); // 获取 Jpsi_1_mass 的值
+         double jpsi2_mass = Jpsi_2_mass->at(cand->GetId()); // 获取 Jpsi_2_mass 的值
+         double phi_mass = Phi_mass->at(cand->GetId());      // 获取 Phi_mass 的值
+         h2->Fill(jpsi1_mass, jpsi2_mass);      // 填充到二维直方图
+         h3->Fill(jpsi1_mass, phi_mass);         // 填充到二维直方图
+         h4->Fill(jpsi2_mass, phi_mass);         // 填充到二维直方图
+
+         m_Jpsi_1.setVal(Jpsi_1_mass->at(cand->GetId()));
+         m_Jpsi_2.setVal(Jpsi_2_mass->at(cand->GetId()));
+         m_Phi.setVal(Phi_mass->at(cand->GetId()));
+         data.add(RooArgSet(m_Jpsi_1, m_Jpsi_2, m_Phi));
       }
       ClearBranches();
       CandList.clear();
    }
 
    // Draw the histograms.
-   TCanvas *c1 = new TCanvas("c1", "c1", 1600, 1200);
-   c1->Divide(2,2);
+   TCanvas *Jpsi1MassCanvas = new TCanvas("Jpsi1MassCanvas", "Jpsi1MassCanvas", 1600, 1200);
+   Jpsi1MassCanvas->Divide(2,2);
    RooPlot* Jpsi_1_mass_frame = Jpsi_1_mass_var.frame(nBins);
    RooPlot* Jpsi_2_mass_frame = Jpsi_2_mass_var.frame(nBins);
    RooPlot* Phi_mass_frame = Phi_mass_var.frame(nBins);
@@ -563,20 +723,20 @@ void secCut::Loop()
    Jpsi_2_mass_set_multi.plotOn(Jpsi_2_mass_frame);
    Phi_mass_set_multi.plotOn(Phi_mass_frame);
    Pri_mass_set_multi.plotOn(Pri_mass_frame);
-   c1->cd(1);
+   Jpsi1MassCanvas->cd(1);
    Jpsi_1_mass_frame->Draw();
-   c1->cd(2);
+   Jpsi1MassCanvas->cd(2);
    Jpsi_2_mass_frame->Draw();
-   c1->cd(3);
+   Jpsi1MassCanvas->cd(3);
    Phi_mass_frame->Draw();
-   c1->cd(4);
+   Jpsi1MassCanvas->cd(4);
    Pri_mass_frame->Draw();
-   c1->SaveAs("secCut_multi_by_VtxProb.pdf");
-   c1->SaveAs("secCut_multi_by_VtxProb.png");
+   Jpsi1MassCanvas->SaveAs("secCut_multi_by_pT.pdf");
+   Jpsi1MassCanvas->SaveAs("secCut_multi_by_pT.png");
 
    // Draw the histograms for the non-overlap candidates.
-   TCanvas *c2 = new TCanvas("c2", "c2", 1600, 1200);
-   c2->Divide(2,2);
+   TCanvas *Jpsi2MassCanvas = new TCanvas("Jpsi2MassCanvas", "Jpsi2MassCanvas", 1600, 1200);
+   Jpsi2MassCanvas->Divide(2,2);
    RooPlot* Jpsi_1_mass_frame_nonOverlap = Jpsi_1_mass_var.frame(nBins);
    RooPlot* Jpsi_2_mass_frame_nonOverlap = Jpsi_2_mass_var.frame(nBins);
    RooPlot* Phi_mass_frame_nonOverlap = Phi_mass_var.frame(nBins);
@@ -585,20 +745,20 @@ void secCut::Loop()
    Jpsi_2_mass_set.plotOn(Jpsi_2_mass_frame_nonOverlap);
    Phi_mass_set.plotOn(Phi_mass_frame_nonOverlap);
    Pri_mass_set.plotOn(Pri_mass_frame_nonOverlap);
-   c2->cd(1);
+   Jpsi2MassCanvas->cd(1);
    Jpsi_1_mass_frame_nonOverlap->Draw();
-   c2->cd(2);
+   Jpsi2MassCanvas->cd(2);
    Jpsi_2_mass_frame_nonOverlap->Draw();
-   c2->cd(3);
+   Jpsi2MassCanvas->cd(3);
    Phi_mass_frame_nonOverlap->Draw();
-   c2->cd(4);
+   Jpsi2MassCanvas->cd(4);
    Pri_mass_frame_nonOverlap->Draw();
-   c2->SaveAs("secCut_nonOverlap_by_VtxProb.pdf");
-   c2->SaveAs("secCut_nonOverlap_by_VtxProb.png");
+   Jpsi2MassCanvas->SaveAs("secCut_nonOverlap_by_pT.pdf");
+   Jpsi2MassCanvas->SaveAs("secCut_nonOverlap_by_pT.png");
 
    // Draw the histograms for the ctau
-   TCanvas *c3 = new TCanvas("c3", "c3", 1600, 1200);
-   c3->Divide(2,2);
+   TCanvas *PhiMassCanvas = new TCanvas("PhiMassCanvas", "PhiMassCanvas", 1600, 1200);
+   PhiMassCanvas->Divide(2,2);
    RooPlot* Jpsi_1_ctau_frame = Jpsi_1_ctau_var.frame(nBins);
    RooPlot* Jpsi_2_ctau_frame = Jpsi_2_ctau_var.frame(nBins);
    RooPlot* Phi_ctau_frame = Phi_ctau_var.frame(nBins);
@@ -607,24 +767,24 @@ void secCut::Loop()
    Jpsi_2_ctau_set.plotOn(Jpsi_2_ctau_frame);
    Phi_ctau_set.plotOn(Phi_ctau_frame);
    Pri_ctau_set.plotOn(Pri_ctau_frame);
-   c3->cd(1);
+   PhiMassCanvas->cd(1);
    gPad->SetLogy();
    Jpsi_1_ctau_frame->Draw();
-   c3->cd(2);
+   PhiMassCanvas->cd(2);
    gPad->SetLogy();
    Jpsi_2_ctau_frame->Draw();
-   c3->cd(3);
+   PhiMassCanvas->cd(3);
    gPad->SetLogy();
    Phi_ctau_frame->Draw();
-   c3->cd(4);
+   PhiMassCanvas->cd(4);
    gPad->SetLogy();
    Pri_ctau_frame->Draw();
-   c3->SaveAs("secCut_ctau.pdf");
-   c3->SaveAs("secCut_ctau.png");
+   PhiMassCanvas->SaveAs("secCut_ctau_by_pT.pdf");
+   PhiMassCanvas->SaveAs("secCut_ctau_by_pT.png");
 
    // Draw the histograms for the VtxProb
-   TCanvas *c4 = new TCanvas("c4", "c4", 1600, 1200);
-   c4->Divide(2,2);
+   TCanvas *PriMassCanvas = new TCanvas("PriMassCanvas", "PriMassCanvas", 1600, 1200);
+   PriMassCanvas->Divide(2,2);
    RooPlot* Jpsi_1_VtxProb_frame = Jpsi_1_VtxProb_var.frame(nBins);
    RooPlot* Jpsi_2_VtxProb_frame = Jpsi_2_VtxProb_var.frame(nBins);
    RooPlot* Phi_VtxProb_frame = Phi_VtxProb_var.frame(nBins);
@@ -633,20 +793,20 @@ void secCut::Loop()
    Jpsi_2_VtxProb_set.plotOn(Jpsi_2_VtxProb_frame);
    Phi_VtxProb_set.plotOn(Phi_VtxProb_frame);
    Pri_VtxProb_set.plotOn(Pri_VtxProb_frame);
-   c4->cd(1);
+   PriMassCanvas->cd(1);
    // gPad->SetLogy();
    Jpsi_1_VtxProb_frame->Draw();
-   c4->cd(2);
+   PriMassCanvas->cd(2);
    // gPad->SetLogy();
    Jpsi_2_VtxProb_frame->Draw();
-   c4->cd(3);
+   PriMassCanvas->cd(3);
    // gPad->SetLogy();
    Phi_VtxProb_frame->Draw();
-   c4->cd(4);
+   PriMassCanvas->cd(4);
    // gPad->SetLogy();
    Pri_VtxProb_frame->Draw();
-   c4->SaveAs("secCut_VtxProb.pdf");
-   c4->SaveAs("secCut_VtxProb.png");
+   PriMassCanvas->SaveAs("secCut_VtxProb_by_pT.pdf");
+   PriMassCanvas->SaveAs("secCut_VtxProb_by_pT.png");
 
    // Draw the histograms for the ctau error
    // TCanvas *c5 = new TCanvas("c5", "c5", 1600, 1200);
@@ -692,8 +852,200 @@ void secCut::Loop()
    c6->cd(3);
    gPad->SetLogy();
    Phi_Lxy_frame->Draw();
-   c6->SaveAs("secCut_Lxy.pdf");
-   c6->SaveAs("secCut_Lxy.png");
+   c6->SaveAs("secCut_Lxy_by_pT_raw.pdf");
+   c6->SaveAs("secCut_Lxy_by_pT_raw.png");
+
+
+
+   
+
+   // auto lego = new TCanvas("lego", "lego options", 150, 150, 800, 600);
+   // lego->Divide(2, 2);
+   // lego->SetFillColor(cancolor);
+   // lego->cd(1);
+   // h2->Draw("lego");
+   // lego->SaveAs("secCut_Mass_lego.pdf");
+   // lego->SaveAs("secCut_Mass_lego.png");
+
+   auto surf = new TCanvas("surfopt", "surface options", 200, 200, 800, 600);
+   surf->Divide(2, 2);
+   surf->SetFillColor(cancolor);
+   surf->cd(1);
+   h2->Draw("surf3");
+   surf->cd(2);
+   h3->Draw("surf3");
+   surf->cd(3);
+   h4->Draw("surf3");
+   surf->SaveAs("secCut_Mass_surf.pdf");
+   surf->SaveAs("secCut_Mass_surf.png");
+
+   // 执行三维拟合
+   //RooFitResult* fitResult = model.fitTo(data, RooFit::Extended(true), RooFit::Save(), RooFit::PrintLevel(1));
+   //RooFitResult* fitResult = extendedModel.fitTo(data, RooFit::Save(), RooFit::PrintLevel(1));
+   RooFitResult* fitResult = totalModel.fitTo(data, RooFit::Extended(true), RooFit::Save(), RooFit::PrintLevel(1));
+
+   // 创建新的画布展示拟合结果
+   TCanvas *fitCanvas = new TCanvas("fitCanvas", "Fit Results", 1800, 600);
+   fitCanvas->Divide(3, 1);
+
+   // 创建分布的帧
+   RooPlot* frameMJpsi1 = m_Jpsi_1.frame(RooFit::Title("J/#psi_{1} Mass Distribution"), RooFit::Bins(40));
+   RooPlot* frameMJpsi2 = m_Jpsi_2.frame(RooFit::Title("J/#psi_{2} Mass Distribution"), RooFit::Bins(40));
+   RooPlot* frameMPhi = m_Phi.frame(RooFit::Title("#Phi Mass Distribution"), RooFit::Bins(40));
+
+   // 绘制数据
+   data.plotOn(frameMJpsi1);
+   data.plotOn(frameMJpsi2);
+   data.plotOn(frameMPhi);
+
+   // 在每个变量上投影PDF
+   // model.plotOn(frameMJpsi1, RooFit::Components("model_Jpsi_1"), RooFit::LineColor(kRed));
+   // model.plotOn(frameMJpsi1, RooFit::Components("signal_Jpsi_1"), RooFit::LineColor(kBlue), RooFit::LineStyle(kDashed));
+   // model.plotOn(frameMJpsi1, RooFit::Components("bkg_Jpsi_1"), RooFit::LineColor(kGreen), RooFit::LineStyle(kDashed));
+
+   // model.plotOn(frameMJpsi2, RooFit::Components("model_Jpsi_2"), RooFit::LineColor(kRed));
+   // model.plotOn(frameMJpsi2, RooFit::Components("signal_Jpsi_2"), RooFit::LineColor(kBlue), RooFit::LineStyle(kDashed));
+   // model.plotOn(frameMJpsi2, RooFit::Components("bkg_Jpsi_2"), RooFit::LineColor(kGreen), RooFit::LineStyle(kDashed));
+
+   // model.plotOn(frameMPhi, RooFit::Components("model_Phi"), RooFit::LineColor(kRed));
+   // model.plotOn(frameMPhi, RooFit::Components("signal_Phi"), RooFit::LineColor(kBlue), RooFit::LineStyle(kDashed));
+   // model.plotOn(frameMPhi, RooFit::Components("bkg_Phi"), RooFit::LineColor(kGreen), RooFit::LineStyle(kDashed));
+
+   totalModel.plotOn(frameMJpsi1, RooFit::LineColor(kRed));
+   totalModel.plotOn(frameMJpsi1, RooFit::Components("pdf_SSS"), 
+                  RooFit::LineColor(kRed), RooFit::FillColor(kRed-4), 
+                  RooFit::FillStyle(3004), RooFit::DrawOption("F"));
+   totalModel.plotOn(frameMJpsi1, RooFit::Components("pdf_SSS,pdf_SSB,pdf_SBS,pdf_SBB"), 
+                  RooFit::LineColor(kBlue), RooFit::LineStyle(kDashed));
+   totalModel.plotOn(frameMJpsi1, RooFit::Components("pdf_BSS,pdf_BSB,pdf_BBS,pdf_BBB"), 
+                  RooFit::LineColor(kGreen), RooFit::LineStyle(kDashed));
+
+   totalModel.plotOn(frameMJpsi2, RooFit::LineColor(kRed));
+   totalModel.plotOn(frameMJpsi2, RooFit::Components("pdf_SSS"), 
+                  RooFit::LineColor(kRed), RooFit::FillColor(kRed-4), 
+                  RooFit::FillStyle(3004), RooFit::DrawOption("F"));
+   totalModel.plotOn(frameMJpsi2, RooFit::Components("pdf_SSS,pdf_SSB,pdf_BSS,pdf_BSB"), 
+                  RooFit::LineColor(kBlue), RooFit::LineStyle(kDashed));
+   totalModel.plotOn(frameMJpsi2, RooFit::Components("pdf_SBS,pdf_SBB,pdf_BBS,pdf_BBB"), 
+                  RooFit::LineColor(kGreen), RooFit::LineStyle(kDashed));
+
+   totalModel.plotOn(frameMPhi, RooFit::LineColor(kRed));
+   totalModel.plotOn(frameMPhi, RooFit::Components("pdf_SSS"), 
+                 RooFit::LineColor(kRed), RooFit::FillColor(kRed-4), 
+                 RooFit::FillStyle(3004), RooFit::DrawOption("F"));
+   totalModel.plotOn(frameMPhi, RooFit::Components("pdf_SSS,pdf_SBS,pdf_BSS,pdf_BBS"), 
+                  RooFit::LineColor(kBlue), RooFit::LineStyle(kDashed));
+   totalModel.plotOn(frameMPhi, RooFit::Components("pdf_SSB,pdf_SBB,pdf_BSB,pdf_BBB"), 
+                  RooFit::LineColor(kGreen), RooFit::LineStyle(kDashed));
+
+   // 添加拟合结果文本框
+   fitCanvas->cd(1);
+   frameMJpsi1->Draw();
+   TPaveText *textJpsi1 = new TPaveText(0.65, 0.7, 0.9, 0.9, "NDC");
+   textJpsi1->AddText(Form("Mean = %.3f #pm %.3f GeV", mean_Jpsi_1.getVal(), mean_Jpsi_1.getError()));
+   textJpsi1->AddText(Form("CB #sigma = %.3f #pm %.3f GeV", sigma_CB_1.getVal(), sigma_CB_1.getError()));
+   textJpsi1->AddText(Form("Gauss #sigma = %.3f #pm %.3f GeV", sigma_Gauss_1.getVal(), sigma_Gauss_1.getError()));
+   //textJpsi1->AddText(Form("N_{sss} = %.0f #pm %.0f", nsig_Jpsi_1_SSS.getVal(), nsig_Jpsi_1_SSS.getError()));
+   textJpsi1->AddText(Form("SSS events = %.0f #pm %.0f", 
+      yield_SSS.getVal(), sqrt(pow(yield_SSS.getError(),2))));
+   textJpsi1->SetFillColor(0);
+   textJpsi1->SetBorderSize(1);
+   textJpsi1->Draw();
+
+   fitCanvas->cd(2);
+   frameMJpsi2->Draw();
+   TPaveText *textJpsi2 = new TPaveText(0.65, 0.7, 0.9, 0.9, "NDC");
+   textJpsi2->AddText(Form("Mean = %.3f #pm %.3f GeV", mean_Jpsi_2.getVal(), mean_Jpsi_2.getError()));
+   textJpsi2->AddText(Form("CB #sigma = %.3f #pm %.3f GeV", sigma_CB_2.getVal(), sigma_CB_2.getError()));
+   textJpsi2->AddText(Form("Gauss #sigma = %.3f #pm %.3f GeV", sigma_Gauss_2.getVal(), sigma_Gauss_2.getError()));
+   //textJpsi2->AddText(Form("N_{sss} = %.0f #pm %.0f", nsig_Jpsi_2_SSS.getVal(), nsig_Jpsi_2_SSS.getError()));
+   textJpsi2->AddText(Form("SSS events = %.0f #pm %.0f", 
+      yield_SSS.getVal(), sqrt(pow(yield_SSS.getError(),2))));
+   textJpsi2->SetFillColor(0);
+   textJpsi2->SetBorderSize(1);
+   textJpsi2->Draw();
+
+   fitCanvas->cd(3);
+   frameMPhi->Draw();
+   TPaveText *textPhi = new TPaveText(0.65, 0.7, 0.9, 0.9, "NDC");
+   textPhi->AddText(Form("Mean = %.3f #pm %.3f GeV", mean_Phi.getVal(), mean_Phi.getError()));
+   textPhi->AddText(Form("Sigma = %.3f #pm %.3f GeV", sigma_Phi.getVal(), sigma_Phi.getError()));
+   //textPhi->AddText(Form("N_{sss} = %.0f #pm %.0f", nsig_Phi_SSS.getVal(), nsig_Phi_SSS.getError()));
+   textPhi->AddText(Form("SSS events = %.0f #pm %.0f", 
+      yield_SSS.getVal(), sqrt(pow(yield_SSS.getError(),2))));
+   textPhi->SetFillColor(0);
+   textPhi->SetBorderSize(1);
+   textPhi->Draw();
+
+   // 保存拟合结果
+   fitCanvas->SaveAs("secCut_Fit_Results.pdf");
+   fitCanvas->SaveAs("secCut_Fit_Results.png");
+
+   // 打印拟合参数
+   // std::cout << "\n===== Fit Results =====" << std::endl;
+   // std::cout << "J/psi_1 Mean: " << mean_Jpsi_1.getVal() << " ± " << mean_Jpsi_1.getError() << " GeV" << std::endl;
+   // std::cout << "J/psi_2 Mean: " << mean_Jpsi_2.getVal() << " ± " << mean_Jpsi_2.getError() << " GeV" << std::endl;
+   // std::cout << "Phi Mean: " << mean_Phi.getVal() << " ± " << mean_Phi.getError() << " GeV" << std::endl;
+   // std::cout << "Phi Width: " << sigma_Phi.getVal()*1000 << " ± " << sigma_Phi.getError()*1000 << " MeV" << std::endl;
+
+   // 打印每个model的参数
+   // RooArgSet* components = model.getComponents();
+   // std::cout << "\n===== Model Components =====" << std::endl;
+   // components->Print("v");
+
+   std::cout << "\n===== Component Yields =====" << std::endl;
+   std::cout << "SSS: " << yield_SSS.getVal() << " ± " << yield_SSS.getError() << std::endl;
+   std::cout << "SSB: " << yield_SSB.getVal() << " ± " << yield_SSB.getError() << std::endl;
+   std::cout << "SBS: " << yield_SBS.getVal() << " ± " << yield_SBS.getError() << std::endl;
+   std::cout << "BSS: " << yield_BSS.getVal() << " ± " << yield_BSS.getError() << std::endl;
+   std::cout << "SBB: " << yield_SBB.getVal() << " ± " << yield_SBB.getError() << std::endl;
+   std::cout << "BSB: " << yield_BSB.getVal() << " ± " << yield_BSB.getError() << std::endl;
+   std::cout << "BBS: " << yield_BBS.getVal() << " ± " << yield_BBS.getError() << std::endl;
+   std::cout << "BBB: " << yield_BBB.getVal() << " ± " << yield_BBB.getError() << std::endl;
+
+   // 计算总信号数和背景数
+   double total_events = yield_SSS.getVal() + yield_SSB.getVal() + yield_SBS.getVal() + yield_BSS.getVal() +
+                     yield_SBB.getVal() + yield_BSB.getVal() + yield_BBS.getVal() + yield_BBB.getVal();
+                     
+   double pure_signal_events = yield_SSS.getVal();
+   double signal_err = yield_SSS.getError();
+
+   std::cout << "\n===== Summary =====" << std::endl;
+   std::cout << "Total events: " << total_events << std::endl;
+   std::cout << "Pure signal events (SSS): " << pure_signal_events << " ± " << signal_err << std::endl;
+   std::cout << "Pure signal fraction: " << pure_signal_events/total_events*100 << "%" << std::endl;
+
+   // 1. 首先保存包含信号+背景的拟合结果
+   RooFitResult* fitResult_SB = totalModel.fitTo(data, RooFit::Extended(true), 
+   RooFit::Save(), RooFit::PrintLevel(1));
+   double nll_SB = fitResult_SB->minNll(); // 带信号+背景的负对数似然值
+
+   // 2. 强制信号产率为零，只拟合背景
+   RooConstVar zero_SSS("zero_SSS", "Constrained zero for SSS", 0.0);
+   RooAbsReal* yield_SSS_orig = (RooAbsReal*)yield_SSS.clone("yield_SSS_orig");
+   yield_SSS.setAttribute("Constant");
+   yield_SSS.setVal(0);
+
+   // 3. 用零信号假设再次拟合
+   RooFitResult* fitResult_B = totalModel.fitTo(data, RooFit::Extended(true), 
+   RooFit::Save(), RooFit::PrintLevel(1));
+   double nll_B = fitResult_B->minNll(); // 仅背景的负对数似然值
+
+   // 4. 恢复原始状态
+   yield_SSS.setAttribute("Constant", false);
+   yield_SSS.setVal(yield_SSS_orig->getVal());
+   delete yield_SSS_orig;
+
+   // 5. 计算似然比检验统计量
+   double deltaLL = nll_B - nll_SB;
+   double significance = sqrt(2 * deltaLL);
+
+   std::cout << "\n===== Significance Calculation =====" << std::endl;
+   std::cout << "Log-likelihood (S+B): " << -nll_SB << std::endl;
+   std::cout << "Log-likelihood (B only): " << -nll_B << std::endl;
+   std::cout << "Delta Log-likelihood: " << deltaLL << std::endl;
+   std::cout << "Significance: " << significance << " sigma" << std::endl;
+
 
 
    // Save the output tree.
